@@ -214,7 +214,7 @@ use self::enter::enter;
 mod handle;
 pub use self::handle::{Handle, TryCurrentError};
 
-mod io;
+pub(super) mod io;
 
 cfg_rt_threaded! {
     mod park;
@@ -494,5 +494,17 @@ impl Runtime {
             mut blocking_pool, ..
         } = self;
         blocking_pool.shutdown(Some(duration));
+    }
+
+    /// Craps out a RawFd for *nix systems, if one exists.
+    #[cfg(unix)]
+    pub fn driver_fd(&self) -> Option<std::os::unix::io::RawFd> {
+        use std::os::unix::io::AsRawFd;
+        match self.kind {
+            Kind::Basic(ref basic_scheduler) => {
+                Some(basic_scheduler.as_raw_fd())
+            }
+            _ => None,
+        }
     }
 }
