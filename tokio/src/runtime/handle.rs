@@ -31,6 +31,11 @@ pub struct Handle {
 }
 
 impl Handle {
+    #[cfg(feature = "io-driver")]
+    pub fn driver_handle(&self) -> crate::io::driver::Handle {
+        self.io_handle.clone().expect("No driver::Handle on a valid runtime::Handle?")
+    }
+
     /// Enter the runtime context.
     pub fn enter<F, R>(&self, f: F) -> R
     where
