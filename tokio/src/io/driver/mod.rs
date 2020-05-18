@@ -31,7 +31,7 @@ pub(crate) struct Driver {
 
 /// A reference to an I/O driver
 #[derive(Clone)]
-pub(crate) struct Handle {
+pub struct Handle {
     inner: Weak<Inner>,
 }
 

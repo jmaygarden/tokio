@@ -50,7 +50,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 /// Block the current thread.
-pub(crate) trait Park {
+pub trait Park {
     /// Unpark handle type for the `Park` implementation.
     type Unpark: Unpark;
 
@@ -91,7 +91,7 @@ pub(crate) trait Park {
 }
 
 /// Unblock a thread blocked by the associated `Park` instance.
-pub(crate) trait Unpark: Sync + Send + 'static {
+pub trait Unpark: Sync + Send + 'static {
     /// Unblocks a thread that is blocked by the associated `Park` handle.
     ///
     /// Calling `unpark` atomically makes available the unpark token, if it is

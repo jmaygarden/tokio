@@ -171,7 +171,7 @@ mod async_write;
 pub use self::async_write::AsyncWrite;
 
 cfg_io_driver! {
-    pub(crate) mod driver;
+    pub mod driver;
 
     mod poll_evented;
     pub use poll_evented::PollEvented;
