@@ -69,6 +69,8 @@ pub struct Builder {
 
     /// Customizable keep alive timeout for BlockingPool
     pub(super) keep_alive: Option<Duration>,
+
+    pub(super) park_shim: Option<ParkShim>,
 }
 
 pub(crate) type ThreadNameFn = std::sync::Arc<dyn Fn() -> String + Send + Sync + 'static>;
@@ -126,6 +128,8 @@ impl Builder {
             before_stop: None,
 
             keep_alive: None,
+
+            park_shim: None,
         }
     }
 
@@ -354,6 +358,17 @@ impl Builder {
         self
     }
 
+    /// Adds a park shim that dictates what the underlying `Park` duration will use.
+    ///
+    /// Very shady stuff.
+    pub fn with_park<F>(&mut self, f: F) -> &mut Self
+        where
+            F: FnMut(Option<std::time::Duration>) -> Option<std::time::Duration> + Sync + Send + 'static,
+    {
+        self.park_shim = Some(Arc::new(std::sync::Mutex::new(Box::new(f))));
+        self
+    }
+
     /// Creates the configured `Runtime`.
     ///
     /// The returned `Runtime` instance is ready to spawn tasks.
@@ -409,7 +424,8 @@ impl Builder {
     fn build_basic_runtime(&mut self) -> io::Result<Runtime> {
         use crate::runtime::{BasicScheduler, Kind};
 
-        let (driver, resources) = driver::Driver::new(self.get_cfg())?;
+        let park_shim = self.park_shim.take();
+        let (driver, resources) = driver::Driver::new(self.get_cfg(), park_shim)?;
 
         // And now put a single-threaded scheduler on top of the timer. When
         // there are no futures ready to do something, it'll let the timer or
@@ -495,7 +511,9 @@ cfg_rt_multi_thread! {
             let core_threads = self.worker_threads.unwrap_or_else(|| cmp::min(self.max_threads, num_cpus()));
             assert!(core_threads <= self.max_threads, "Core threads number cannot be above max limit");
 
-            let (driver, resources) = driver::Driver::new(self.get_cfg())?;
+            let park_shim = self.park_shim.take();
+
+            let (driver, resources) = driver::Driver::new(self.get_cfg(), park_shim)?;
 
             let (scheduler, launch) = ThreadPool::new(core_threads, Parker::new(driver));
             let spawner = Spawner::ThreadPool(scheduler.spawner().clone());

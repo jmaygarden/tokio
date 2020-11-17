@@ -12,14 +12,14 @@ cfg_io_driver! {
     type IoStack = crate::park::either::Either<ProcessDriver, ParkThread>;
     pub(crate) type IoHandle = Option<crate::io::driver::Handle>;
 
-    fn create_io_stack(enabled: bool) -> io::Result<(IoStack, IoHandle, SignalHandle)> {
+    fn create_io_stack(enabled: bool, park_shim: Option<ParkShim>) -> io::Result<(IoStack, IoHandle, SignalHandle)> {
         use crate::park::either::Either;
 
         #[cfg(loom)]
         assert!(!enabled);
 
         let ret = if enabled {
-            let io_driver = crate::io::driver::Driver::new()?;
+            let io_driver = crate::io::driver::Driver::new(park_shim)?;
             let io_handle = io_driver.handle();
 
             let (signal_driver, signal_handle) = create_signal_driver(io_driver)?;
