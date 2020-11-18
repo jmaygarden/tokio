@@ -66,6 +66,14 @@ impl Driver {
     }
 }
 
+#[cfg(unix)]
+impl std::os::unix::io::AsRawFd for Driver {
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
+        use std::os::unix::io::AsRawFd;
+        self.park.as_raw_fd()
+    }
+}
+
 // ===== impl Park for Driver =====
 
 impl Park for Driver {
