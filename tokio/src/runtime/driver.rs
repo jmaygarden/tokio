@@ -193,11 +193,11 @@ impl std::os::unix::io::AsRawFd for Driver {
         match &self.inner {
             // FIXME: THIS
             Either::A(a) => {
-                //0i32.into()
-                a.as_raw_fd()
+                0i32.into()
+                // a.as_raw_fd()
             },
             Either::B(b) => {
-                b.as_raw_fd()
+                // b.as_raw_fd()
                 /*match &b {
                     Either::A(aa) => {
                         0i32.into()
@@ -207,7 +207,7 @@ impl std::os::unix::io::AsRawFd for Driver {
                     }
 
                 }*/
-                //0i32.into()
+                0i32.into()
             },
         }
    }
