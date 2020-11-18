@@ -1,6 +1,7 @@
 //! Abstracts out the entire chain of runtime sub-drivers into common types.
 use crate::park::thread::ParkThread;
 use crate::park::Park;
+use crate::runtime::ParkShim;
 
 use std::io;
 use std::time::Duration;
@@ -164,8 +165,8 @@ pub(crate) struct Cfg {
 }
 
 impl Driver {
-    pub(crate) fn new(cfg: Cfg) -> io::Result<(Self, Resources)> {
-        let (io_stack, io_handle, signal_handle) = create_io_stack(cfg.enable_io)?;
+    pub(crate) fn new(cfg: Cfg, park_shim: Option<ParkShim>) -> io::Result<(Self, Resources)> {
+        let (io_stack, io_handle, signal_handle) = create_io_stack(cfg.enable_io, park_shim)?;
 
         let clock = create_clock();
         let (time_driver, time_handle) =
