@@ -197,17 +197,14 @@ impl std::os::unix::io::AsRawFd for Driver {
                 // a.as_raw_fd()
             },
             Either::B(b) => {
-                // b.as_raw_fd()
-                /*match &b {
+                match &b {
                     Either::A(aa) => {
                         0i32.into()
                     }
                     Either::B(bb) => {
                         0i32.into()
                     }
-
-                }*/
-                0i32.into()
+                }
             },
         }
    }
