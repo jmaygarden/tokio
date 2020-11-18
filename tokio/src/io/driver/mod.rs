@@ -14,6 +14,7 @@ use std::fmt;
 use std::io;
 use std::sync::{Arc, Weak};
 use std::time::Duration;
+use crate::runtime::ParkShim;
 
 /// I/O driver, backed by Mio
 pub(crate) struct Driver {

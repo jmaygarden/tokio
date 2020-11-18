@@ -1,5 +1,5 @@
 use crate::runtime::handle::Handle;
-use crate::runtime::{blocking, driver, Callback, Runtime, Spawner};
+use crate::runtime::{blocking, driver, Callback, Runtime, Spawner, ParkShim};
 
 use std::fmt;
 use std::io;
@@ -365,7 +365,7 @@ impl Builder {
         where
             F: FnMut(Option<std::time::Duration>) -> Option<std::time::Duration> + Sync + Send + 'static,
     {
-        self.park_shim = Some(Arc::new(std::sync::Mutex::new(Box::new(f))));
+        self.park_shim = Some(std::sync::Arc::new(std::sync::Mutex::new(Box::new(f))));
         self
     }
 
