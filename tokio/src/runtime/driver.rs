@@ -186,10 +186,8 @@ impl Driver {
 
 #[cfg(unix)]
 impl std::os::unix::io::AsRawFd for Driver {
-//type TimeDriver = crate::park::either::Either<crate::time::driver::Driver<IoStack>, IoStack>;
    fn as_raw_fd(&self) ->  std::os::unix::io::RawFd {
         use crate::park::either::Either;
-        //use crate::time::driver::Driver as InnerTimeDriver;
         match &self.inner {
             Either::A(a) => {
                 a.as_raw_fd()
