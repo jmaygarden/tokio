@@ -73,6 +73,12 @@ impl Park for ParkThread {
     }
 }
 
+impl std::os::unix::io::AsRawFd for ParkThread {
+   fn as_raw_fd(&self) ->  std::os::unix::io::RawFd {
+       unimplemented!()
+   }
+}
+
 // ==== impl Inner ====
 
 impl Inner {

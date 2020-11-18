@@ -572,7 +572,8 @@ cfg_rt! {
                 Kind::CurrentThread(ref basic_scheduler) => {
                     Some(basic_scheduler.as_raw_fd())
                 }
-                _ => None,
+                #[cfg(feature = "rt-multi-thread")]
+                Kind::ThreadPool(exec) => None,
             }
         }
     }
