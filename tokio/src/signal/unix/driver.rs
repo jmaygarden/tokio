@@ -136,6 +136,13 @@ unsafe fn noop_clone(_data: *const ()) -> RawWaker {
 
 unsafe fn noop(_data: *const ()) {}
 
+impl std::os::unix::io::AsRawFd for Driver {
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
+        // TODO: I _think_ this is right, but verify.
+        self.receiver.get_ref().as_raw_fd()
+    }
+}
+
 // ===== impl Park for Driver =====
 
 impl Park for Driver {

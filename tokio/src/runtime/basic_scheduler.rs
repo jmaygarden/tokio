@@ -94,9 +94,13 @@ const REMOTE_FIRST_INTERVAL: u8 = 31;
 scoped_thread_local!(static CURRENT: Context);
 
 #[cfg(unix)]
-impl std::os::unix::io::AsRawFd for BasicScheduler<crate::runtime::driver::Driver> {
+impl<P> std::os::unix::io::AsRawFd for BasicScheduler<P>
+where
+    P: Park + std::os::unix::io::AsRawFd,
+{
     fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
-        use crate::park::either::Either;
+        self.inner.lock().as_ref().unwrap().park.as_raw_fd()
+        /*use crate::park::either::Either;
 
         match self.inner.lock().unwrap().park {
             Either::A(ref time_driver) => {
@@ -112,7 +116,7 @@ impl std::os::unix::io::AsRawFd for BasicScheduler<crate::runtime::driver::Drive
                     }
                 }
             }
-        }
+        }*/
     }
 }
 

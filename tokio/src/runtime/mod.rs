@@ -567,7 +567,7 @@ cfg_rt! {
         pub fn driver_fd(&self) -> Option<std::os::unix::io::RawFd> {
             use std::os::unix::io::AsRawFd;
             match self.kind {
-                Kind::Basic(ref basic_scheduler) => {
+                Kind::CurrentThread(ref basic_scheduler) => {
                     Some(basic_scheduler.as_raw_fd())
                 }
                 _ => None,

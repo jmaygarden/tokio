@@ -39,7 +39,7 @@ cfg_not_io_driver! {
     pub(crate) type IoHandle = ();
     type IoStack = ParkThread;
 
-    fn create_io_stack(_enabled: bool) -> io::Result<(IoStack, IoHandle, SignalHandle)> {
+    fn create_io_stack(_enabled: bool, _park_shim: Option<ParkShim>) -> io::Result<(IoStack, IoHandle, SignalHandle)> {
         Ok((ParkThread::new(), Default::default(), Default::default()))
     }
 }
@@ -182,6 +182,24 @@ impl Driver {
             },
         ))
     }
+}
+
+#[cfg(unix)]
+impl std::os::unix::io::AsRawFd for Driver {
+//type TimeDriver = crate::park::either::Either<crate::time::driver::Driver<IoStack>, IoStack>;
+   fn as_raw_fd(&self) ->  std::os::unix::io::RawFd {
+        use crate::park::either::Either;
+        //use crate::time::driver::Driver as InnerTimeDriver;
+        match &self.inner {
+            // FIXME: THIS
+            Either::A(a) => {
+                0i32.into()
+            },
+            Either::B(b) => {
+                0i32.into()
+            },
+        }
+   }
 }
 
 impl Park for Driver {
