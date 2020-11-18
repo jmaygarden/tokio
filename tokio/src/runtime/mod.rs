@@ -568,8 +568,8 @@ cfg_rt! {
         #[cfg(unix)]
         pub fn driver_fd(&self) -> Option<std::os::unix::io::RawFd> {
             use std::os::unix::io::AsRawFd;
-            match self.kind {
-                Kind::CurrentThread(ref basic_scheduler) => {
+            match &self.kind {
+                Kind::CurrentThread(basic_scheduler) => {
                     Some(basic_scheduler.as_raw_fd())
                 }
                 #[cfg(feature = "rt-multi-thread")]
