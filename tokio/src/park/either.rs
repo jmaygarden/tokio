@@ -10,6 +10,20 @@ pub(crate) enum Either<A, B> {
     B(B),
 }
 
+#[cfg(unix)]
+impl<A, B> std::os::unix::io::AsRawFd for Either<A, B>
+    where
+        A: std::os::unix::io::AsRawFd,
+        B: std::os::unix::io::AsRawFd,
+{
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
+        match self {
+            Either::A(a) => a.as_raw_fd(),
+            Either::B(b) => b.as_raw_fd(),
+        }
+    }
+}
+
 impl<A, B> Park for Either<A, B>
 where
     A: Park,

@@ -191,19 +191,15 @@ impl std::os::unix::io::AsRawFd for Driver {
         use crate::park::either::Either;
         //use crate::time::driver::Driver as InnerTimeDriver;
         match &self.inner {
-            // FIXME: THIS
             Either::A(a) => {
-                0i32.into()
-                // a.as_raw_fd()
+                a.as_raw_fd()
             },
             Either::B(b) => {
                 match &b {
                     Either::A(aa) => {
-                        // 0i32.into()
                         aa.as_raw_fd()
                     }
                     Either::B(bb) => {
-                        // 0i32.into()
                         bb.as_raw_fd()
                     }
                 }
