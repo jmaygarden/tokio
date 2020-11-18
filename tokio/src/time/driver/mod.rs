@@ -95,31 +95,13 @@ pub(crate) struct Driver<T: Park> {
     is_shutdown: bool,
 }
 
-//type TimeDriver = crate::park::either::Either<crate::time::driver::Driver<IoStack>, IoStack>;
-// use TimeDriver;
-// SignalDriver;
-
 #[cfg(unix)]
-impl std::os::unix::io::AsRawFd for Driver</*crate::io::driver::Driver*/SignalDriver> {
+impl<P> std::os::unix::io::AsRawFd for Driver<P>
+where
+    P: Park + std::os::unix::io::AsRawFd
+{
     fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
         self.park.as_raw_fd()
-    }
-}
-
-#[cfg(unix)]
-impl std::os::unix::io::AsRawFd for Driver</*crate::runtime::io::Driver*/ SignalDriver> {
-    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
-        use crate::park::either::Either;
-
-        match self.park {
-            Either::A(ref driver) => {
-                driver.as_raw_fd()
-            }
-            Either::B(_) => {
-                unimplemented!()
-            }
-        }
-        //self.park.as_raw_fd()
     }
 }
 
