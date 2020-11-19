@@ -161,6 +161,13 @@ impl Driver {
 
         let mut events = self.events.take().expect("i/o driver event store missing");
 
+        let max_wait = if let Some(ref mut shim) = self.park_shim {
+            let f = &mut *shim.lock().unwrap();
+            f(max_wait)
+        } else {
+            max_wait
+        };
+
         // Block waiting for an event to happen, peeling out how many events
         // happened.
         match self.poll.poll(&mut events, max_wait) {
@@ -234,24 +241,12 @@ impl Park for Driver {
     }
 
     fn park(&mut self) -> io::Result<()> {
-        let new_duration = if let Some(ref mut shim) = self.park_shim {
-            let f = &mut *shim.lock().unwrap();
-            f(None)
-        } else {
-            None
-        };
-        self.turn(new_duration)?;
+        self.turn(None)?;
         Ok(())
     }
 
     fn park_timeout(&mut self, duration: Duration) -> io::Result<()> {
-        let new_duration = if let Some(ref mut shim) = self.park_shim {
-            let f = &mut *shim.lock().unwrap();
-            f(Some(duration))
-        } else {
-            Some(duration)
-        };
-        self.turn(new_duration)?;
+        self.turn(Some(duration))?;
         Ok(())
     }
 
