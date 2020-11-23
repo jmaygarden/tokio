@@ -99,6 +99,29 @@ pub(crate) struct Driver<T: Park> {
     is_shutdown: bool,
 }
 
+#[cfg(unix)]
+impl std::os::unix::io::AsRawFd for Driver<crate::io::driver::Driver> {
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
+        self.park.as_raw_fd()
+    }
+}
+
+#[cfg(unix)]
+impl std::os::unix::io::AsRawFd for Driver<crate::runtime::io::Driver> {
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
+        use crate::park::Either;
+
+        match self.park {
+            Either::A(ref driver) => {
+                driver.as_raw_fd()
+            }
+            Either::B(_) => {
+                unimplemented!()
+            }
+        }
+    }
+}
+
 /// Timer state shared between `Driver`, `Handle`, and `Registration`.
 pub(crate) struct Inner {
     /// The instant at which the timer started running.

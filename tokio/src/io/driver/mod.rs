@@ -191,6 +191,13 @@ impl fmt::Debug for Driver {
     }
 }
 
+#[cfg(unix)]
+impl std::os::unix::io::AsRawFd for Driver {
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
+        self.inner.io.as_raw_fd()
+    }
+}
+
 // ===== impl Handle =====
 
 impl Handle {
