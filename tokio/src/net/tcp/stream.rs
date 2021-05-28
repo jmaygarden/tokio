@@ -833,6 +833,16 @@ impl TcpStream {
             Err(e) => Poll::Ready(Err(e)),
         }
     }
+
+    pub async fn readable(&self) -> io::Result<()> {
+        poll_fn(|cx| self.io.poll_read_ready(cx, mio::Ready::readable())).await?;
+        Ok(())
+    }
+
+    pub async fn writable(&self) -> io::Result<()> {
+        poll_fn(|cx| self.io.poll_write_ready(cx)).await?;
+        Ok(())
+    }
 }
 
 impl TryFrom<TcpStream> for mio::net::TcpStream {
