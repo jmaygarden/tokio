@@ -118,6 +118,16 @@ const REMOTE_FIRST_INTERVAL: u8 = 31;
 // Tracks the current BasicScheduler.
 scoped_thread_local!(static CURRENT: Context);
 
+#[cfg(unix)]
+impl<P: Park> std::os::unix::io::AsRawFd for BasicScheduler<P> {
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
+        match self.inner.lock().as_ref() {
+            Some(inner) => inner.park.as_raw_fd(),
+            None => -1,
+        }
+    }
+}
+
 impl<P: Park> BasicScheduler<P> {
     pub(crate) fn new(park: P) -> BasicScheduler<P> {
         let unpark = Box::new(park.unpark());

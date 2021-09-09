@@ -1,6 +1,7 @@
 //! Abstracts out the entire chain of runtime sub-drivers into common types.
 use crate::park::thread::ParkThread;
 use crate::park::Park;
+use crate::runtime::ParkShim;
 
 use std::io;
 use std::time::Duration;
@@ -12,14 +13,14 @@ cfg_io_driver! {
     type IoStack = crate::park::either::Either<ProcessDriver, ParkThread>;
     pub(crate) type IoHandle = Option<crate::io::driver::Handle>;
 
-    fn create_io_stack(enabled: bool) -> io::Result<(IoStack, IoHandle, SignalHandle)> {
+    fn create_io_stack(enabled: bool, park_shim: Option<ParkShim>) -> io::Result<(IoStack, IoHandle, SignalHandle)> {
         use crate::park::either::Either;
 
         #[cfg(loom)]
         assert!(!enabled);
 
         let ret = if enabled {
-            let io_driver = crate::io::driver::Driver::new()?;
+            let io_driver = crate::io::driver::Driver::new(park_shim)?;
             let io_handle = io_driver.handle();
 
             let (signal_driver, signal_handle) = create_signal_driver(io_driver)?;
@@ -38,7 +39,7 @@ cfg_not_io_driver! {
     pub(crate) type IoHandle = ();
     type IoStack = ParkThread;
 
-    fn create_io_stack(_enabled: bool) -> io::Result<(IoStack, IoHandle, SignalHandle)> {
+    fn create_io_stack(_enabled: bool, _park_shim: Option<ParkShim>) -> io::Result<(IoStack, IoHandle, SignalHandle)> {
         Ok((ParkThread::new(), Default::default(), Default::default()))
     }
 }
@@ -163,11 +164,12 @@ pub(crate) struct Cfg {
     pub(crate) enable_time: bool,
     pub(crate) enable_pause_time: bool,
     pub(crate) start_paused: bool,
+    pub(crate) park_shim: Option<ParkShim>,
 }
 
 impl Driver {
     pub(crate) fn new(cfg: Cfg) -> io::Result<(Self, Resources)> {
-        let (io_stack, io_handle, signal_handle) = create_io_stack(cfg.enable_io)?;
+        let (io_stack, io_handle, signal_handle) = create_io_stack(cfg.enable_io, cfg.park_shim)?;
 
         let clock = create_clock(cfg.enable_pause_time, cfg.start_paused);
 
@@ -204,5 +206,10 @@ impl Park for Driver {
 
     fn shutdown(&mut self) {
         self.inner.shutdown()
+    }
+
+    #[cfg(unix)]
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
+        self.inner.as_raw_fd()
     }
 }

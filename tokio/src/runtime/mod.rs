@@ -286,6 +286,10 @@ cfg_rt! {
     /// After thread starts / before thread stops
     type Callback = std::sync::Arc<dyn Fn() + Send + Sync>;
 
+    /// Takes the `Duration` for the underlying `Park` and uses it, giving back
+    /// some modified version of the duration for use.
+    pub type ParkShim = std::sync::Arc<std::sync::Mutex<Box<dyn FnMut(Option<Duration>) -> Option<Duration> + Send + Sync>>>;
+
     impl Runtime {
         /// Create a new runtime instance with default configuration values.
         ///
@@ -558,6 +562,24 @@ cfg_rt! {
         /// ```
         pub fn shutdown_background(self) {
             self.shutdown_timeout(Duration::from_nanos(0))
+        }
+
+        /// Returns the driver's RawFd for *nix systems, if one exists.
+        #[cfg(unix)]
+        pub fn driver_fd(&self) -> Option<std::os::unix::io::RawFd> {
+            use std::os::unix::io::AsRawFd;
+            match self.kind {
+                Kind::CurrentThread(ref basic_scheduler) => {
+                    let raw_fd = basic_scheduler.as_raw_fd();
+
+                    if raw_fd >= 0 {
+                        Some(raw_fd)
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            }
         }
     }
 }

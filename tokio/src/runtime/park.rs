@@ -108,6 +108,13 @@ impl Park for Parker {
     fn shutdown(&mut self) {
         self.inner.shutdown();
     }
+
+    #[cfg(unix)]
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
+        use std::os::unix::io::AsRawFd;
+
+        self.inner.as_raw_fd()
+    }
 }
 
 impl Unpark for Unparker {
@@ -253,5 +260,18 @@ impl Inner {
         }
 
         self.condvar.notify_all();
+    }
+}
+
+#[cfg(unix)]
+impl std::os::unix::io::AsRawFd for Inner {
+    fn as_raw_fd(&self) -> std::os::unix::prelude::RawFd {
+        loop {
+            if let Some(driver) = self.shared.driver.try_lock() {
+                return driver.as_raw_fd();
+            }
+
+            std::hint::spin_loop()
+        }
     }
 }

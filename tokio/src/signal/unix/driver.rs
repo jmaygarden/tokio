@@ -161,6 +161,11 @@ impl Park for Driver {
     fn shutdown(&mut self) {
         self.park.shutdown()
     }
+
+    #[cfg(unix)]
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
+        self.park.as_raw_fd()
+    }
 }
 
 // ===== impl Handle =====

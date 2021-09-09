@@ -45,6 +45,14 @@ where
             Either::B(b) => b.shutdown(),
         }
     }
+
+    #[cfg(unix)]
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
+        match self {
+            Either::A(a) => a.as_raw_fd(),
+            Either::B(b) => b.as_raw_fd(),
+        }
+    }
 }
 
 impl<A, B> Unpark for Either<A, B>
