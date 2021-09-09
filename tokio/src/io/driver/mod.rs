@@ -15,6 +15,7 @@ mod scheduled_io;
 use scheduled_io::ScheduledIo;
 
 use crate::park::{Park, Unpark};
+use crate::runtime::ParkShim;
 use crate::util::slab::{self, Slab};
 use crate::{loom::sync::Mutex, util::bit};
 
@@ -43,6 +44,8 @@ pub(crate) struct Driver {
 
     /// State shared between the reactor and the handles.
     inner: Arc<Inner>,
+
+    park_shim: Option<ParkShim>,
 }
 
 /// A reference to an I/O driver.
@@ -112,7 +115,7 @@ fn _assert_kinds() {
 impl Driver {
     /// Creates a new event loop, returning any error that happened during the
     /// creation.
-    pub(crate) fn new() -> io::Result<Driver> {
+    pub(crate) fn new(park_shim: Option<ParkShim>) -> io::Result<Driver> {
         let poll = mio::Poll::new()?;
         let waker = mio::Waker::new(poll.registry(), TOKEN_WAKEUP)?;
         let registry = poll.registry().try_clone()?;
@@ -131,6 +134,7 @@ impl Driver {
                 io_dispatch: allocator,
                 waker,
             }),
+            park_shim,
         })
     }
 
@@ -231,16 +235,35 @@ impl Park for Driver {
     }
 
     fn park(&mut self) -> io::Result<()> {
-        self.turn(None)?;
+        let new_duration = if let Some(ref mut shim) = self.park_shim {
+            let f = &mut *shim.lock().unwrap();
+            f(None)
+        } else {
+            None
+        };
+        self.turn(new_duration)?;
         Ok(())
     }
 
     fn park_timeout(&mut self, duration: Duration) -> io::Result<()> {
-        self.turn(Some(duration))?;
+        let new_duration = if let Some(ref mut shim) = self.park_shim {
+            let f = &mut *shim.lock().unwrap();
+            f(Some(duration))
+        } else {
+            Some(duration)
+        };
+        self.turn(new_duration)?;
         Ok(())
     }
 
     fn shutdown(&mut self) {}
+
+    #[cfg(unix)]
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
+        use std::os::unix::io::AsRawFd;
+
+        self.poll.as_raw_fd()
+    }
 }
 
 impl fmt::Debug for Driver {

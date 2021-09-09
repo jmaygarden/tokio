@@ -87,6 +87,10 @@ pub(crate) trait Park {
 
     /// Releases all resources holded by the parker for proper leak-free shutdown.
     fn shutdown(&mut self);
+
+    /// Expose a raw file descriptor for integration with external event loops.
+    #[cfg(unix)]
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd;
 }
 
 /// Unblock a thread blocked by the associated `Park` instance.

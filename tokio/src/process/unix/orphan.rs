@@ -282,7 +282,7 @@ pub(crate) mod test {
 
     #[test]
     fn does_not_register_signal_if_queue_empty() {
-        let signal_driver = IoDriver::new().and_then(SignalDriver::new).unwrap();
+        let signal_driver = IoDriver::new(None).and_then(SignalDriver::new).unwrap();
         let handle = signal_driver.handle();
 
         let orphanage = OrphanQueueImpl::new();

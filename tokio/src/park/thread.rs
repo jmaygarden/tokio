@@ -71,6 +71,11 @@ impl Park for ParkThread {
     fn shutdown(&mut self) {
         self.inner.shutdown();
     }
+
+    #[cfg(unix)]
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
+        -1
+    }
 }
 
 // ==== impl Inner ====
@@ -289,6 +294,11 @@ impl Park for CachedParkThread {
 
     fn shutdown(&mut self) {
         let _ = self.with_current(|park_thread| park_thread.inner.shutdown());
+    }
+
+    #[cfg(unix)]
+    fn as_raw_fd(&self) -> std::os::unix::io::RawFd {
+        self.with_current(|park_thread| park_thread.as_raw_fd()).unwrap_or(-1)
     }
 }
 
